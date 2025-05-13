@@ -1,5 +1,5 @@
 from app import db, ma
-from sqlalchemy import Column, String, Numeric, DateTime, ForeignKey, Enum
+from sqlalchemy import Column, String, Numeric, DateTime, ForeignKey, Enum, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import uuid
@@ -36,3 +36,25 @@ class TransactionSchema(ma.SQLAlchemyAutoSchema):
     account_id = fields.Str(required=True)
     transaction_type = fields.Enum(TransactionType)
     timestamp = fields.DateTime(dump_only=True)
+
+class TransactionStatus(enum.Enum):
+    PENDING = 'pending'
+    COMPLETED = 'completed'
+    FAILED = 'failed'
+    REVERSED = 'reversed'
+
+class AdvancedTransaction(db.Model):
+    __tablename__ = 'advanced_transactions'
+
+    id = Column(String(36), primary_key=True)
+    sender_account_id = Column(String(36), ForeignKey('accounts.id'))
+    recipient_account_id = Column(String(36), ForeignKey('accounts.id'))
+    amount = Column(Numeric(10, 2), nullable=False)
+    transaction_type = Column(Enum(TransactionType), nullable=False)
+    status = Column(Enum(TransactionStatus), default=TransactionStatus.PENDING)
+    fee = Column(Numeric(10, 2), default=0.00)
+    is_internal = Column(Boolean, default=True)
+    metadata = Column(String(500))  # JSON-serialized additional info
+
+    sender_account = relationship('Account', foreign_keys=[sender_account_id])
+    recipient_account = relationship('Account', foreign_keys=[recipient_account_id])

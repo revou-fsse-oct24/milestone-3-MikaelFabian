@@ -17,7 +17,7 @@ class Account(db.Model):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     # Relationships
-    user = relationship('User', back_populates='accounts')
+    user = db.relationship('User', back_populates='accounts')
     transactions = relationship('Transaction', back_populates='account')
 
     def __repr__(self):
